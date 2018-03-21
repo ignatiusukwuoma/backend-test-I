@@ -1,8 +1,8 @@
 import os
 import re
 import tweepy
-
 from dotenv import load_dotenv, find_dotenv
+from sheet import SpreadSheet
 
 load_dotenv(find_dotenv())
 
@@ -27,8 +27,17 @@ class TwitterlyStreamListener(tweepy.StreamListener):
 
     def on_status(self, status):
         """Called when a new status arrives"""
+
         screen_name = status.user.screen_name
         followers_count = status.user.followers_count
+
+        twitter_bio = {'screen_name': screen_name, 'followers_count': followers_count}
+
+        spreadsheet = SpreadSheet()
+        sheet_name = os.getenv('SPREADSHEET_NAME')
+        if not sheet_name:
+            sheet_name = 'New spreadsheet'
+        spreadsheet.write(sheet_name, twitter_bio)
 
         print('[x] Twitter Handle:', screen_name)
         print('[x] Number of Followers:', followers_count)
@@ -37,11 +46,9 @@ class TwitterlyStreamListener(tweepy.StreamListener):
 
 if __name__ == "__main__":
     user_entry = input("[+] Enter hashtag(s) to listen for, separated by space or comma: ")
-    print('Entries', user_entry)
     cleaned_entry = re.split('\W+', user_entry)
-    print('Cleaned Entries', cleaned_entry)
-    hashtags = ['#' + entry for entry in cleaned_entry]
-    print('Hashtags', hashtags)
+    hashtags = [f'#{entry}' for entry in cleaned_entry]
+
     if hashtags:
         api = initialize_api()
         myStreamListener = TwitterlyStreamListener()
