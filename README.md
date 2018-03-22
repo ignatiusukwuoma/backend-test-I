@@ -65,7 +65,14 @@ Twitter Setup and Google Spreadsheets Setup below.
 6. Save the Private Key to your project root directory as `client_secret.json`
 
 ## Run the app
-Before running the app, ensure to install requirements and run the test so you can be sure there are no issues.
+Before running the app: 
+
+* Create a virtual environment and activate it
+```commandline
+python3 -m venv twitterly_env
+source twitterly_env/bin/activate
+```
+Ensure to install requirements and run the test so you can be sure there are no issues.
 
 * Install the project requirements 
 ```commandline
