@@ -1,7 +1,9 @@
 import os
 import re
+
 import tweepy
 from dotenv import load_dotenv, find_dotenv
+
 from sheet import SpreadSheet
 
 load_dotenv(find_dotenv())
@@ -12,8 +14,35 @@ ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
 ACCESS_TOKEN_SECRET = os.getenv('ACCESS_TOKEN_SECRET')
 
 
+def write_data(data):
+    """
+    Write data to Google Sheets
+    :param data: obj. The data to be written to Google Sheets
+    """
+
+    spreadsheet = SpreadSheet()
+    sheet_name = os.getenv('SPREADSHEET_NAME')
+    if not sheet_name:
+        sheet_name = 'New spreadsheet'
+    spreadsheet.write(sheet_name, data)
+
+
+def extract_tags(entry):
+    """
+    Extracts hashtags from user entry
+    :param entry: str. User entry
+    :return tags: list. Hashtags
+    """
+    cleaned_entry = re.split('\W+', entry)
+    tags = [f'#{entry}' for entry in cleaned_entry]
+    return tags
+
+
 def initialize_api():
-    """ Initializes the Tweepy API """
+    """
+    Initializes the Tweepy API
+    :return: class. tweepy.API
+    """
 
     if not all([CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET]):
         raise ValueError('Please provide all the required Twitter credentials')
@@ -24,20 +53,20 @@ def initialize_api():
 
 
 class TwitterlyStreamListener(tweepy.StreamListener):
+    """ Twitter Stream listener """
 
     def on_status(self, status):
-        """Called when a new status arrives"""
+        """
+        Called when a new status arrives
+        :param status: A tweet that meets the condition
+        that our stream is listening for.
+        """
 
         screen_name = status.user.screen_name
         followers_count = status.user.followers_count
 
         twitter_bio = {'screen_name': screen_name, 'followers_count': followers_count}
-
-        spreadsheet = SpreadSheet()
-        sheet_name = os.getenv('SPREADSHEET_NAME')
-        if not sheet_name:
-            sheet_name = 'New spreadsheet'
-        spreadsheet.write(sheet_name, twitter_bio)
+        write_data(twitter_bio)
 
         print('[x] Twitter Handle:', screen_name)
         print('[x] Number of Followers:', followers_count)
@@ -46,9 +75,7 @@ class TwitterlyStreamListener(tweepy.StreamListener):
 
 if __name__ == "__main__":
     user_entry = input("[+] Enter hashtag(s) to listen for, separated by space or comma: ")
-    cleaned_entry = re.split('\W+', user_entry)
-    hashtags = [f'#{entry}' for entry in cleaned_entry]
-
+    hashtags = extract_tags(user_entry)
     if hashtags:
         api = initialize_api()
         myStreamListener = TwitterlyStreamListener()
