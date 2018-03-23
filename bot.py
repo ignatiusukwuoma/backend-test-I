@@ -27,15 +27,16 @@ def write_data(data):
     spreadsheet.write(sheet_name, data)
 
 
-def extract_tags(entry):
+def persist_bio(screen_name, followers_count):
     """
-    Extracts hashtags from user entry
-    :param entry: str. User entry
-    :return tags: list. Hashtags
+    Calls the function to write data to Spreadsheet
+    only if the number of followers is between 1000 and 50000
+    :param screen_name: str. Profile name of the user
+    :param followers_count: int. Number of followers
     """
-    cleaned_entry = re.split('\W+', entry)
-    tags = [f'#{entry}' for entry in cleaned_entry]
-    return tags
+    if 1000 <= followers_count <= 50000:
+        twitter_bio = {'screen_name': screen_name, 'followers_count': followers_count}
+        write_data(twitter_bio)
 
 
 def initialize_api():
@@ -52,6 +53,17 @@ def initialize_api():
     return tweepy.API(auth)
 
 
+def extract_tags(entry):
+    """
+    Extracts hashtags from user entry
+    :param entry: str. User entry
+    :return tags: list. Hashtags
+    """
+    cleaned_entry = re.split('\W+', entry)
+    tags = [f'#{entry}' for entry in cleaned_entry]
+    return tags
+
+
 class TwitterlyStreamListener(tweepy.StreamListener):
     """ Twitter Stream listener """
 
@@ -64,9 +76,7 @@ class TwitterlyStreamListener(tweepy.StreamListener):
 
         screen_name = status.user.screen_name
         followers_count = status.user.followers_count
-
-        twitter_bio = {'screen_name': screen_name, 'followers_count': followers_count}
-        write_data(twitter_bio)
+        persist_bio(screen_name, followers_count)
 
         print('[x] Twitter Handle:', screen_name)
         print('[x] Number of Followers:', followers_count)
